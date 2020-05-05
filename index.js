@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const port = 8002;
 
+app.use(express.urlencoded());
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./config/mongoose');
 app.use(expressLayouts);

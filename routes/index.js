@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.get('/' , homeController.home);
 router.use('/user', require('./users'));
-router.use('/user',require('./userscreate'));
+
 
 module.exports = router;
