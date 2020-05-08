@@ -1,19 +1,64 @@
 const express = require('express');
 const app = express();
 const port = 8002;
-
-app.use(express.urlencoded());
+const cookieParser = require('cookie-parser');
 const expressLayouts = require('express-ejs-layouts');
 const db = require('./config/mongoose');
-app.use(expressLayouts);
+//require all for session cookie
+const session = require('express-session');
+const passport = require('passport');
+const passportLocal = require('./config/passport-local-strategy');
+//to store session cookie means user data permanently in the database
 
+const mongoStore = require('connect-mongo')(session);//becz we require to store session data
+
+app.use(express.urlencoded());
+app.use(cookieParser());
+app.use(expressLayouts);
 app.use(express.static('./assets'));
 // extract css and scripts from the subpage to Layouts.ejs
 app.set('layout extractStyles',true);
 app.set('layout extractScripts',true);
-app.use('/' , require('./routes'));
+
 app.set('view engine', 'ejs');
 app.set('views' , './views');
+
+//middleware which takes the session cookie and encrypts it
+//mongo store is used to store session cookie in db
+app.use(session({
+    //name of the cookie
+    name: 'Codeial',
+    //TODO set the secret before deploying the code 
+    secret: 'something',
+    saveUninitialized: false,
+    resave:false,
+    //expiring time of the session or cookie
+    cookie:{
+        maxAge: (1000 * 60 * 100)
+    },
+
+    //store session cookie in the memory so that when the server fire or user signed out then user data won't lose
+    store: new mongoStore({
+        mongooseConnection: db,
+        autoRemove: 'disabled'
+    },
+    function(err){
+        console.log(err || 'connect mongo db setup ok');
+    }
+
+    )
+}
+));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+//whenever the passport initialize and session being used then the below function is also being set as a middleware
+
+app.use(passport.setAuthenticatedUser);
+
+//to express router
+app.use('/' , require('./routes'));
 
 app.listen(port,function(err){
     if(err){

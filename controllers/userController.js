@@ -1,7 +1,7 @@
 const User = require('../model/user');
 
 
-module.exports.user = function(request,respond){
+module.exports.userProfile = function(request,respond){
     // return respond.end('<h1>User Profile</h1>');
     return respond.render('user_profile',{
         title:""
@@ -9,6 +9,12 @@ module.exports.user = function(request,respond){
 }
 //to render sign up page
 module.exports.sign_up = function(req,res){
+
+    //if the user is already present then dont need to render sign up page to user
+    if(req.isAuthenticated()){
+        return res.redirect('/user/profile');
+    } 
+
     return res.render('user_sign_up',{
         title:"Sign Up"
     });
@@ -16,6 +22,12 @@ module.exports.sign_up = function(req,res){
 
 //to render sign in page
 module.exports.sign_in = function(req,res){
+
+    //if the user is already signed in then dont need to render sign in page to user
+    if(req.isAuthenticated()){
+        return res.redirect('/user/profile');
+    }
+
     return res.render('user_sign_in',{
         title:"Sign In"
     });
@@ -44,8 +56,19 @@ module.exports.create = function(req,res){
 }
 
 
-//sign in and create session
+//sign in and create session using passport middleware
 module.exports.createSession = function(req,res){
+    // console.log("user create session");
+    // return res.render('user_profile',{
+    //     title:"Codeial/Profile"
+    // });  
+    return res.redirect('/');
+}
+
+//remove the session cookie
+module.exports.destroySession = function(req,res){
     
-    
+    //logout the session using passport library
+    req.logout();
+    return res.redirect('/');
 }
