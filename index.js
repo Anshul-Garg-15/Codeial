@@ -8,9 +8,24 @@ const db = require('./config/mongoose');
 const session = require('express-session');
 const passport = require('passport');
 const passportLocal = require('./config/passport-local-strategy');
+const sassMiddleware = require('node-sass-middleware');
+
 //to store session cookie means user data permanently in the database
 
 const mongoStore = require('connect-mongo')(session);//becz we require to store session data
+
+//use sass for css and set some properties
+// before deployment declare sass middleware at first by doing this its precompiled before running the server and whenever template wants then browser or template get precompiled files
+app.use(sassMiddleware({
+
+    src: './assets/scss',
+    dest: './assets/css',
+    debug: true,
+    outputStyle: 'extended',
+    prefix: '/css'
+
+}));
+
 
 app.use(express.urlencoded());
 app.use(cookieParser());
