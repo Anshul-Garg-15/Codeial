@@ -3,9 +3,27 @@ const User = require('../model/user');
 
 module.exports.userProfile = function(request,respond){
     // return respond.end('<h1>User Profile</h1>');
-    return respond.render('user_profile',{
-        title:""
+    User.findById(request.params.id, function(err,user){
+
+        return respond.render('user_profile',{
+            title:"",
+            profile_user:user
+        });
+
     });
+    
+}
+
+module.exports.update = function(req,res){
+    if(req.user.id == req.params.id){
+        User.findByIdAndUpdate(req.params.id , req.body,function(err,user){
+
+            return res.redirect('back');
+
+        });
+    }else{
+        return res.status(401).send('Unauthorized');
+    }
 }
 //to render sign up page
 module.exports.sign_up = function(req,res){

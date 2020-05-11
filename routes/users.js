@@ -4,7 +4,8 @@ const router = express.Router();
 const passport = require('passport');
 
 //profile is only visible when user is signed in
-router.get('/profile' , passport.checkAuthentication ,  userController.userProfile);
+router.get('/profile/:id' , passport.checkAuthentication ,  userController.userProfile);
+router.post('/update/:id' , passport.checkAuthentication ,  userController.update);
 router.get('/sign-up' , userController.sign_up);
 router.get('/sign-in' , userController.sign_in);
 router.post('/create' , userController.create);

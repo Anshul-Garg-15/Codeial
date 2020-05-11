@@ -1,5 +1,5 @@
 const Post = require('../model/post');
-
+const User = require('../model/user');
 module.exports.home = function(request , respond){
     // return respond.end('<h1>Express Server is Running</h1>');
     // console.log(request.cookies);
@@ -16,10 +16,16 @@ module.exports.home = function(request , respond){
     })
     .exec(function(err,posts){
         if(err){console.log("error");return;}
+        //to find all users to render it home page as user friends and send all the users by allUsers property
+        User.find({},function(err,users){
+
+            return respond.render('home',{
+                title: "Codeial | Home",
+                post:posts,
+                allUsers:users
+            });
+
+        });
         
-        return respond.render('home',{
-            title: "Codeial | Home",
-            post:posts
-        })
-    })
+    });
 }
