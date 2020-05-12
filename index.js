@@ -9,7 +9,8 @@ const session = require('express-session');
 const passport = require('passport');
 const passportLocal = require('./config/passport-local-strategy');
 const sassMiddleware = require('node-sass-middleware');
-
+const flash = require('connect-flash');
+const flashMiddleware = require('./config/flashmiddleware'); //is there a flash middleware?yes 
 //to store session cookie means user data permanently in the database
 
 const mongoStore = require('connect-mongo')(session);//becz we require to store session data
@@ -68,6 +69,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+//use flash here becoz it will be use in sessions
+app.use(flash());
+app.use(flashMiddleware.setFlash);
 //whenever the passport initialize and session being used then the below function is also being set as a middleware
 
 app.use(passport.setAuthenticatedUser);

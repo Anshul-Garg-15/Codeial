@@ -12,7 +12,7 @@ module.exports.create = function(req,res){
                 //handle the error
                 post.comments.push(comment);
                 post.save();
-
+                req.flash('success','Add comment successfully');
                 res.redirect('/');
 
             });
@@ -33,22 +33,21 @@ module.exports.destroy = function(req,res){
             {
                 if(post)
                 {
-                    console.log("postt found ",post);
+                    console.log("post found ",post);
                     if(comment.user == req.user.id || req.user.id==post.user){
 
                         let postId = comment.post;
                         comment.remove();
                         Post.findByIdAndUpdate(postId , {$pull : {comments:req.params.id}},function(err,post){
+                            req.flash('success' , 'Comment deleted');
                             return res.redirect('back');
                         })
                     }else{
+                        req.flash('error','You cannot delete this comment');
                         return res.redirect('/');
                     }
                 }
-            })
-           
+            })  
         }
-        
-
     });
 }

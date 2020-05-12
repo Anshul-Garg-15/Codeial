@@ -10,14 +10,13 @@ module.exports.userProfile = function(request,respond){
             profile_user:user
         });
 
-    });
-    
+    });    
 }
 
 module.exports.update = function(req,res){
     if(req.user.id == req.params.id){
         User.findByIdAndUpdate(req.params.id , req.body,function(err,user){
-
+            req.flash('success' , 'Update Successfully');
             return res.redirect('back');
 
         });
@@ -50,6 +49,7 @@ module.exports.sign_in = function(req,res){
         title:"Sign In"
     });
 }
+
 //get the sign up data
 module.exports.create = function(req,res){
 
@@ -67,19 +67,18 @@ module.exports.create = function(req,res){
             })
         }else{
             return res.redirect('back');
-        }
-
-
-    })
+        }    
+    });
 }
-
 
 //sign in and create session using passport middleware
 module.exports.createSession = function(req,res){
     // console.log("user create session");
     // return res.render('user_profile',{
     //     title:"Codeial/Profile"
-    // });  
+    // });
+    //we will use custom middleware to send this flash to respond currently It is set in request like req.flash  
+    req.flash('success' , 'Logged In Successfully');
     return res.redirect('/');
 }
 
@@ -88,5 +87,6 @@ module.exports.destroySession = function(req,res){
     
     //logout the session using passport library
     req.logout();
+    req.flash('success' , 'Logged Out Successfully');
     return res.redirect('/');
 }
