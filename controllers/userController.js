@@ -1,5 +1,6 @@
 const User = require('../model/user');
-
+const fs = require('fs');
+const path = require('path');
 
 module.exports.userProfile = function(request,respond){
     // return respond.end('<h1>User Profile</h1>');
@@ -13,16 +14,51 @@ module.exports.userProfile = function(request,respond){
     });    
 }
 
-module.exports.update = function(req,res){
-    if(req.user.id == req.params.id){
-        User.findByIdAndUpdate(req.params.id , req.body,function(err,user){
-            req.flash('success' , 'Update Successfully');
-            return res.redirect('back');
+module.exports.update = async function(req,res){
+    // if(req.user.id == req.params.id){
+    //     User.findByIdAndUpdate(req.params.id , req.body,function(err,user){
+    //         req.flash('success' , 'Update Successfully');
+    //         return res.redirect('back');
 
+    //     });
+    // }else{
+    //     return res.status(401).send('Unauthorized');
+    // }
+
+
+    if(req.user.id == req.params.id){
+        try {
+        
+            let user = await User.findById(req.params.id);
+            //by this we can get data from multitype form
+            User.uploadedAvatar(req,res,function(err){
+
+                if(err){console.log('Error in multer',err);return;}
+                console.log(req.file);
+                user.name = req.body.name;
+                user.email = req.body.email;
+
+
+            if(req.file){
+                //this delete another profile image 
+                if(user.avatar){
+                    fs.unlinkSync(path.join(__dirname, '..' , user.avatar));
+                }
+                //this is saving the path of uploaded file into avatar field name in user
+                user.avatar = User.avatarpath + '/' + req.file.filename;
+
+            }
+            user.save();
+            return res.redirect('back');
         });
-    }else{
-        return res.status(401).send('Unauthorized');
+    } catch (err) {
+        req.flash('error',err);
+        return res.redirect('back');
     }
+    }else{
+        req.flash('error','Unauthorized');
+        return res.status(401).send('Unauthorized');
+    }    
 }
 //to render sign up page
 module.exports.sign_up = function(req,res){
