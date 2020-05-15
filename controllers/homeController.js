@@ -7,13 +7,16 @@ module.exports.home = async function(request , respond){
    try{
        //finding the post and show it on the home page with user details
     //call back function in exec
-    let posts = await Post.find({}).populate('user')
+    let posts = await Post.find({}).sort('-createdAt')
+    .populate('user')
     .populate({
         path:'comments',
         populate:{
             path:'user'
         }
     });
+    
+    console.log(posts);
     //to find all users to render it home page as user friends and send all the users by allUsers property
     let users = await User.find({});
 

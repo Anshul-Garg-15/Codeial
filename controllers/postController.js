@@ -5,12 +5,26 @@ const Comment = require('../model/comment');
 module.exports.create = async function(req,res){
     try{
 
-        await Post.create({
+      let post =  await Post.create({
             content: req.body.content,
             user: req.user.id
         });
-        req.flash('success','Post Published');
-        return res.redirect('back');
+
+        //check that coming data is in ajax form or not
+        if(req.xhr){
+            //to show the name of the user
+            post = await post.populate('user', 'name').execPopulate();
+            //return in JSOn form with status
+            return res.status(200).json({
+                data: {
+                    post: post
+                },
+                message:"Post Created!"
+
+            });
+        }
+        // req.flash('success','Post Published');
+        // return res.redirect('back');
 
     }catch(err){
         req.flash('error',err);
@@ -28,6 +42,16 @@ module.exports.destroy = async function(req,res){
             post.remove();
 
           await Comment.deleteMany({post:req.params.id});
+          if(req.xhr){
+            //return in JSOn form with status
+            return res.status(200).json({
+                data: {
+                    post_id: req.params.id
+                },
+                message:"Post Deleted!"
+
+            });
+        }
           req.flash('success' , 'Post and associated comment deleted');
           return res.redirect('back');
         }else{
