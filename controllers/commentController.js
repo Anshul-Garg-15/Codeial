@@ -1,82 +1,94 @@
 const Comment = require('../model/comment');
 const Post = require('../model/post')
+const commentMailer = require('../mailers/comments_mailer');
+const queue = require('../config/kue');
+const commentEmailWorker = require('../workers/comment_email_workers');
 
-module.exports.create = function(req,res){
-    Post.findById(req.body.post,function(err,post){
-        if(post){
-            Comment.create({
-                content:req.body.content,
-                post:req.body.post,
-                user:req.user.id
-            },function(err,comment){
-                //handle the error
-                // console.log(req.xhr);
-                post.comments.push(comment);
-                post.save();
-                // comment=comment.populate('user','name').execPopulate();
-                if(req.xhr){
-                    
-                    return res.status(200).json({
-                        data: {
+module.exports.create = async function(req, res){
 
-                            comment: comment
+    try{
+        let post = await Post.findById(req.body.post);
 
-                        },
-                        message: "comment created"
-                    })
-                
-                
-
-                }
-                    
-                // req.flash('success','Add comment successfully');
-                // return res.redirect('/');
-
+        if (post){
+            let comment = await Comment.create({
+                content: req.body.content,
+                post: req.body.post,
+                user: req.user._id
             });
-        }
 
-    });
+            post.comments.push(comment);
+            post.save();
+            
+            comment = await comment.populate('user', 'name email').execPopulate();
+            // commentMailer.newComment(comment);
+            //sending comment using kue(delayed jobs)
+            let job = queue.create('emails' ,comment).save(function(err){ 
+                if(err){
+                    console.log('error in sending mails');
+                    return;
+                };
+                console.log(job.id);
+            });
+            if (req.xhr){
+                
+    
+                return res.status(200).json({
+                    data: {
+                        comment: comment
+                    },
+                    message: "Post created!"
+                });
+            }
+
+
+            req.flash('success', 'Comment published!');
+
+            res.redirect('/');
+        }
+    }catch(err){
+        req.flash('error', err);
+        return;
+    }
+    
 }
 
-module.exports.destroy = function(req,res){
 
-   
 
-    Comment.findById(req.params.id , function(err,comment){
-        if(comment)
-        {
-            // console.log("comment found ",comment);
-            Post.findById(comment.post,function(err,post)
-            {
-                if(post)
-                {
-                    console.log("post found ",post);
-                    if(comment.user == req.user.id || req.user.id==post.user){
 
-                        let postId = comment.post;
-                        comment.remove();
-                        
-                        Post.findByIdAndUpdate(postId , {$pull : {comments:req.params.id}},function(err,post){
-                            if(req.xhr){
-                                //return in JSOn form with status
-                                return res.status(200).json({
-                                    data: {
-                                        comment_id: req.params.id
-                                    },
-                                    message:"Comment Deleted!"
-                    
-                                });
-                            }
-                            // req.flash('success' , 'Comment deleted');
-                            // return res.redirect('back');
-                        });
+module.exports.destroy = async function(req, res){
 
-                    }else{
-                        req.flash('error','You cannot delete this comment');
-                        return res.redirect('/');
-                    }
-                }
-            })  
+    try{
+        let comment = await Comment.findById(req.params.id);
+
+        if (comment.user == req.user.id){
+
+            let postId = comment.post;
+
+            comment.remove();
+
+            let post = Post.findByIdAndUpdate(postId, { $pull: {comments: req.params.id}});
+
+            // send the comment id which was deleted back to the views
+            if (req.xhr){
+                return res.status(200).json({
+                    data: {
+                        comment_id: req.params.id
+                    },
+                    message: "Post deleted"
+                });
+            }
+
+
+            req.flash('success', 'Comment deleted!');
+
+            return res.redirect('back');
+        }else{
+            req.flash('error', 'Unauthorized');
+            return res.redirect('back');
         }
-    });
+    }catch(err){
+        req.flash('error', err);
+        return;
+    }
+    
 }

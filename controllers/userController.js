@@ -65,7 +65,7 @@ module.exports.sign_up = function(req,res){
 
     //if the user is already present then dont need to render sign up page to user
     if(req.isAuthenticated()){
-        return res.redirect('/user/profile');
+        return res.redirect('/users/profile');
     } 
 
     return res.render('user_sign_up',{
@@ -78,7 +78,7 @@ module.exports.sign_in = function(req,res){
 
     //if the user is already signed in then dont need to render sign in page to user
     if(req.isAuthenticated()){
-        return res.redirect('/user/profile');
+        return res.redirect('/users/profile');
     }
 
     return res.render('user_sign_in',{
@@ -99,7 +99,7 @@ module.exports.create = function(req,res){
         if(!user){
             User.create(req.body,function(err , user){
                 if(err){console.log('Error in creating User while signing up'); return}
-                return res.redirect('/user/sign-in');
+                return res.redirect('/users/sign-in');
             })
         }else{
             return res.redirect('back');

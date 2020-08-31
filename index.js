@@ -9,6 +9,7 @@ const session = require('express-session');
 const passport = require('passport');
 const passportLocal = require('./config/passport-local-strategy');
 const passportJwt = require('./config/passport-jwt-strategy');
+const passportGoogle = require('./config/passport-google-oauth20-strategy');
 const sassMiddleware = require('node-sass-middleware');
 const flash = require('connect-flash');
 const flashMiddleware = require('./config/flashmiddleware'); //is there a flash middleware?yes 
