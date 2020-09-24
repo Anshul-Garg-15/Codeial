@@ -11,6 +11,12 @@ router.get('/sign-in' , userController.sign_in);
 router.post('/create' , userController.create);
 
 router.get('/sign-out' , userController.destroySession);
+router.get('/forgot_password' , userController.forgotPassword);
+
+router.post('/forgot_password' , userController.forgotPasswordMail);
+
+router.get('/reset_password/:token', userController.resetPassword);
+router.post('/reset_password/:token', userController.resetPasswordDone);
 
 //authenticate using passport and use passport as a middleware
 
@@ -18,6 +24,7 @@ router.post('/create-session' , passport.authenticate(
     'local',
     {failureRedirect: '/user/sign-in'}
  ) , userController.createSession);
+
 
 
 router.get('/auth/google' , passport.authenticate('google', {scope: ['profile','email']}));

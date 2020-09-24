@@ -20,9 +20,13 @@ const userSchema = mongoose.Schema({
     },
     avatar: {
         type: String
-    }
-
-
+    },
+    resetToken: {
+        type: String,
+      },
+      resetUrl: {
+        type: String,
+      },
 },{
     timestamps:true
 });

@@ -1,6 +1,11 @@
 const User = require('../model/user');
 const fs = require('fs');
 const path = require('path');
+const queue = require('../config/kue');
+const resetpasswordMailer = require('../mailers/reset-password_mailer');
+const resetEmailWorker = require('../workers/reset_password_worker');
+const crypto = require('crypto');
+
 
 module.exports.userProfile = function(request,respond){
     // return respond.end('<h1>User Profile</h1>');
@@ -99,7 +104,7 @@ module.exports.create = function(req,res){
         if(!user){
             User.create(req.body,function(err , user){
                 if(err){console.log('Error in creating User while signing up'); return}
-                return res.redirect('/users/sign-in');
+                return res.redirect('/user/sign-in');
             })
         }else{
             return res.redirect('back');
@@ -126,3 +131,65 @@ module.exports.destroySession = function(req,res){
     req.flash('success' , 'Logged Out Successfully');
     return res.redirect('/');
 }
+
+module.exports.forgotPassword = function (req, res) {
+    return res.render('forgot_password', {
+      title: 'Forgot password',
+    });
+  };
+  
+  module.exports.forgotPasswordMail = function (req, res) {
+    User.findOne({ email: req.body.email }, function (err, user) {
+      if (err) {
+        console.log('Error in finding user', err);
+        return;
+      }
+  
+      const token = crypto.randomBytes(20).toString('hex');
+  
+      user.resetToken = token;
+      user.save({ validateBeforeSave: false });
+      user.resetUrl = `${req.protocol}://${req.get(
+        'host',
+      )}/user/reset_password/${token}`;
+      let job = queue.create('emails', user).save(function (err) {
+        if (err) {
+          console.log('error in sending mails');
+          return;
+        }
+        console.log(job.id);
+      });
+      req.flash('success', 'Email sent successfully');
+      return res.redirect('back');
+    });
+  };
+  
+  module.exports.resetPassword = function (req, res) {
+    return res.render('reset_password', {
+      title: 'Reset Password',
+    });
+  };
+  
+  module.exports.resetPasswordDone = function (req, res) {
+    console.log('sdasd');
+    console.log(req.params.token);
+    User.findOne({ resetToken: req.params.token }, function (err, user) {
+      if (err) {
+        console.log('user not found with this token');
+      }
+  
+      console.log(req.body);
+      if (user) {
+        if (req.body.password == req.body.confirmPassword) {
+          console.log(req.body.password);
+          user.password = req.body.password;
+          user.resetToken = undefined;
+          user.resetUrl = undefined;
+          user.save();
+          req.flash('success', 'Password reset successfully');
+          return res.redirect('/user/sign-in');
+        }
+      }
+      return res.redirect('back');
+    });
+  };
